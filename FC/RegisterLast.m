@@ -1,0 +1,56 @@
+% This function generates the module for the last register of the network
+% INPUTS
+% Number of layers of the FC part of the network
+function RegisterLast(number_of_layers_fc)
+name = sprintf('CNN_Network/FC/Register_FCLast.vhd');
+fileID = fopen(name, 'wt');
+fprintf(fileID, '--------------------REGISTER LAST LAYER MODULE----------------------\n');
+fprintf(fileID, '--This module stores the output data from the neurons until the network is done processing.\n');
+fprintf(fileID, '--INPUTS\n');
+fprintf(fileID, '--data_in : output from the neurons\n');
+fprintf(fileID, '--next_pipeline_step : control signal to know when the data is to be sent\n');
+fprintf(fileID, '--OUTPUTS\n');
+fprintf(fileID, '--data_in : output data of the network\n');
+fprintf(fileID, '--finish : signal to notify that the network is done processing data\n\n');
+fprintf(fileID, 'library IEEE;\n');
+fprintf(fileID, 'use IEEE.STD_LOGIC_1164.ALL;\n');
+fprintf(fileID, 'use work.tfg_irene_package.ALL;\n');
+fprintf(fileID, 'use IEEE.NUMERIC_STD.ALL;\n\n');
+fprintf(fileID, 'entity Register_FCLast is\n');
+fprintf(fileID, '    Port ( clk : in std_logic;\n');
+fprintf(fileID, '           rst : in std_logic;\n');
+fprintf(fileID, '           next_pipeline_step : in std_logic;\n');
+fprintf(fileID, '           data_in : in vector_sm(0 to number_of_outputs_L%dfc-1);\n', number_of_layers_fc);
+fprintf(fileID, '           start_threshold : out std_logic;\n');
+fprintf(fileID, '           data_out : out vector_sm_signed(0 to number_of_outputs_L%dfc-1));\n', number_of_layers_fc);
+fprintf(fileID, '   end Register_FCLast;\n\n');
+fprintf(fileID, 'architecture Behavioral of Register_FCLast is\n');
+fprintf(fileID, 'signal finish_reg, finish_next : std_logic :=''0'';\n\n');
+fprintf(fileID, 'begin\n\n');
+fprintf(fileID, 'process(clk)\n');
+fprintf(fileID, 'begin\n');
+fprintf(fileID, '    if rising_edge(clk) then\n');
+fprintf(fileID, '        if (rst = ''0'') then\n');
+fprintf(fileID, '            data_out <= (others => (others => ''0''));\n');
+fprintf(fileID, '            finish_reg <= ''0'';\n');
+fprintf(fileID, '        else\n');
+fprintf(fileID, '            finish_reg <= finish_next;\n');
+fprintf(fileID, '         if (next_pipeline_step = ''1'') then\n');
+fprintf(fileID, '         for i in 0 to  number_of_outputs_L%dfc - 1 loop\n', number_of_layers_fc);
+fprintf(fileID, '             data_out(i) <= signed(data_in(i));  \n');
+fprintf(fileID, '         end loop;                 \n');
+fprintf(fileID, '         end if;\n');
+fprintf(fileID, '        end if;\n');
+fprintf(fileID, '    end if;\n');
+fprintf(fileID, 'end process;\n');
+fprintf(fileID, 'process(finish_next, next_pipeline_step)\n');
+fprintf(fileID, 'begin\n');
+fprintf(fileID, 'if (next_pipeline_step = ''1'') then\n');
+fprintf(fileID, '    finish_next <= ''1'';    \n');
+fprintf(fileID, 'else                \n');
+fprintf(fileID, '    finish_next <= ''0''; \n');
+fprintf(fileID, 'end if;\n');
+fprintf(fileID, 'end process;\n\n');
+fprintf(fileID, 'start_threshold <= finish_reg;\n');
+fprintf(fileID, 'end Behavioral;\n');
+fclose(fileID);
